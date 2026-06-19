@@ -1,54 +1,70 @@
 using UnityEngine;
 
-public class TrashPickup : MonoBehaviour
+public class Basura : MonoBehaviour
 {
-    private GameObject heldObject = null;
     private Transform player;
-    private Vector3 offsetFromPlayer = new Vector3(0.5f, 0, 0); // Offset para que no quede en el mismo lugar
+    private bool isHeld = false;
+    private Rigidbody2D rb;
+    private Vector3 holdOffset = new Vector3(0.5f, 0, 0);
+    private bool inTrashZone = false;
 
     private void Start()
     {
         player = FindObjectOfType<movimiento>().transform;
-    }
-
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-        if (Input.GetKeyDown(KeyCode.E) && heldObject == null)
-        {
-            // Agarrar el objeto si no tiene uno ya
-            if (collision.CompareTag("Trash"))
-            {
-                heldObject = collision.gameObject;
-                heldObject.GetComponent<Rigidbody2D>().isKinematic = true;
-                Debug.Log("¡Agarraste la basura!");
-            }
-        }
+        rb = GetComponent<Rigidbody2D>();
     }
 
     private void Update()
     {
-        // Si está sosteniendo algo, seguir al jugador
-        if (heldObject != null)
+        if (isHeld && player != null)
         {
-            heldObject.transform.position = player.position + offsetFromPlayer;
-        }
-
-        // Soltar con Q
-        if (Input.GetKeyDown(KeyCode.Q) && heldObject != null)
-        {
-            DropTrash();
+            transform.position = player.position + holdOffset;
         }
     }
 
-    private void DropTrash()
+    private void OnTriggerStay2D(Collider2D collision)
     {
-        heldObject.GetComponent<Rigidbody2D>().isKinematic = false;
-        heldObject = null;
-        Debug.Log("Soltaste la basura");
+        if (collision.CompareTag("Player"))
+        {
+            // Agarrar con E (solo si no estás en el tacho)
+            if (Input.GetKeyDown(KeyCode.E) && !isHeld && !inTrashZone)
+            {
+                isHeld = true;
+                rb.isKinematic = true;
+                Debug.Log("Agarraste la basura");
+            }
+
+            // Soltar con Q (solo si NO estás en el tacho)
+            if (Input.GetKeyDown(KeyCode.Q) && isHeld && !inTrashZone)
+            {
+                isHeld = false;
+                rb.isKinematic = false;
+                Debug.Log("Soltaste la basura");
+            }
+        }
+
+        // Detectar si está en el tacho
+        if (collision.CompareTag("Tacho"))
+        {
+            inTrashZone = true;
+        }
     }
 
-    public bool IsHoldingTrash()
+    private void OnTriggerExit2D(Collider2D collision)
     {
-        return heldObject != null;
+        if (collision.CompareTag("Tacho"))
+        {
+            inTrashZone = false;
+        }
+    }
+
+    public bool GetIsHeld()
+    {
+        return isHeld;
+    }
+
+    public void Eliminar()
+    {
+        Destroy(gameObject);
     }
 }

@@ -1,34 +1,18 @@
 using UnityEngine;
 
-public class TrashDropZone : MonoBehaviour
+public class Tacho : MonoBehaviour
 {
-    private TrashPickup trashPickup;
-    private int trashDelivered = 0;
-    [SerializeField] private int trashRequired = 1; // Cuántos objetos se necesitan
-
-    private void Start()
-    {
-        trashPickup = FindObjectOfType<TrashPickup>();
-    }
-
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player") && Input.GetKeyDown(KeyCode.E))
-        {
-            if (trashPickup.IsHoldingTrash())
-            {
-                trashDelivered++;
-                Debug.Log($"Basura entregada: {trashDelivered}/{trashRequired}");
+        Basura basura = collision.GetComponent<Basura>();
 
-                if (trashDelivered >= trashRequired)
-                {
-                    Debug.Log("¡Tarea de basura completada!");
-                    // Aquí conectas con tu sistema de tareas
-                }
-            }
-            else
+        if (basura != null && basura.GetIsHeld())
+        {
+            // Si presiona Q estando en el tacho con basura agarrada
+            if (Input.GetKeyDown(KeyCode.Q))
             {
-                Debug.Log("No estás sosteniendo nada");
+                Debug.Log("Basura entregada y eliminada");
+                basura.Eliminar();
             }
         }
     }
